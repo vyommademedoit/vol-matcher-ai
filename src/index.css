@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-200 font-sans antialiased;
+    @apply bg-brand-dark text-brand-bright font-sans antialiased;
   }
 }
 
