@@ -21,16 +21,42 @@ L.Icon.Default.mergeOptions({
 });
 
 const ZONE_COORDS = {
-  'North Zone': [28.7041, 77.1025],
-  'South Zone': [13.0827, 80.2707],
-  'East Zone': [22.5726, 88.3639],
-  'West Zone': [19.0760, 72.8777],
-  'Central Zone': [21.1458, 79.0882],
-  'Remote': [24.524, 93.936]
+  'North India':     [30.0668, 79.0193],  // Uttarakhand/UP hills
+  'Northeast India': [26.2006, 92.9376],  // Assam/Guwahati
+  'East India':      [20.9517, 85.0985],  // Odisha/West Bengal
+  'South India':     [13.0827, 80.2707],  // Chennai/TN coast
+  'West India':      [23.0225, 72.5714],  // Gujarat/Ahmedabad
+  'Central India':   [23.2599, 77.4126],  // Bhopal/MP
+  'Remote':          [27.5706, 88.4694],  // Sikkim/Isolated
+  // Legacy aliases for old Firebase data
+  'North Zone':      [30.0668, 79.0193],
+  'East Zone':       [20.9517, 85.0985],
+  'South Zone':      [13.0827, 80.2707],
+  'West Zone':       [23.0225, 72.5714],
+  'Central Zone':    [23.2599, 77.4126],
 };
 
-const needIcon = new L.divIcon({ className: 'bg-red-500 w-4 h-4 rounded-full border-2 border-red-300 shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse', iconSize: [16, 16] });
-const volunteerIcon = new L.divIcon({ className: 'bg-blue-400 w-3 h-3 rounded-full border border-blue-200 shadow-[0_0_10px_rgba(96,165,250,0.5)]', iconSize: [12, 12] });
+const getNeedIcon = (urgency) => {
+  let colorClass = 'bg-red-500 border-red-300 shadow-[0_0_15px_rgba(239,68,68,0.6)]';
+  if (urgency === 'medium') colorClass = 'bg-yellow-500 border-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.6)]';
+  if (urgency === 'low') colorClass = 'bg-green-500 border-green-300 shadow-[0_0_15px_rgba(34,197,94,0.6)]';
+  
+  return new L.divIcon({
+    className: `${colorClass} w-4 h-4 rounded-full border-2 animate-pulse`,
+    iconSize: [16, 16]
+  });
+};
+
+const getVolunteerIcon = (isAvailable) => {
+  const colorClass = isAvailable 
+    ? 'bg-indigo-400 border-indigo-200 shadow-[0_0_10px_rgba(129,140,248,0.5)]'
+    : 'bg-slate-500 border-slate-400 shadow-[0_0_10px_rgba(100,116,139,0.5)]';
+    
+  return new L.divIcon({
+    className: `${colorClass} w-3 h-3 rounded-full border`,
+    iconSize: [12, 12]
+  });
+};
 
 const URGENCY_STYLES = {
   low: 'bg-green-900/30 text-green-400 border-green-800/50',
@@ -42,20 +68,31 @@ const URGENCY_STYLES = {
 
 const AddNeedModal = ({ isOpen, onClose }) => {
   const { addNeed } = useStore();
-  const [formData, setFormData] = useState({ title: '', description: '', skills: '', urgency: 'low', location: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', skills: [], urgency: 'low', location: '' });
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title) return;
+    if (!formData.title || formData.skills.length === 0 || !formData.location) return;
     addNeed({
       ...formData,
-      skills_required: formData.skills.split(',').map(s => s.trim()).filter(Boolean)
+      skills_required: formData.skills
     });
-    setFormData({ title: '', description: '', skills: '', urgency: 'low', location: '' });
+    setFormData({ title: '', description: '', skills: [], urgency: 'low', location: '' });
     onClose();
   };
+
+  const toggleSkill = (skill) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.includes(skill) 
+        ? prev.skills.filter(s => s !== skill) 
+        : [...prev.skills, skill]
+    }));
+  };
+
+  const selectClass = "w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors appearance-none cursor-pointer";
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
@@ -69,7 +106,7 @@ const AddNeedModal = ({ isOpen, onClose }) => {
             <X size={24} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Title</label>
             <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., Medical Supplies Needed" />
@@ -79,13 +116,31 @@ const AddNeedModal = ({ isOpen, onClose }) => {
             <textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" rows="3" placeholder="Describe the need..." />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Required Skills (Comma separated)</label>
-            <input type="text" required value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., Medical, Rescue" />
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Required Skills <span className="text-slate-500 font-normal">(select all that apply)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {SKILL_OPTIONS.map(skill => (
+                <button
+                  key={skill}
+                  type="button"
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                    formData.skills.includes(skill)
+                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-[0_0_8px_rgba(79,70,229,0.2)]'
+                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
+                  }`}
+                >
+                  {skill}
+                </button>
+              ))}
+            </div>
+            {formData.skills.length === 0 && <p className="text-xs text-slate-500 mt-1">Please select at least one skill.</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Urgency</label>
-              <select value={formData.urgency} onChange={e => setFormData({ ...formData, urgency: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors">
+              <select value={formData.urgency} onChange={e => setFormData({ ...formData, urgency: e.target.value })} className={selectClass}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="critical">Critical</option>
@@ -93,7 +148,10 @@ const AddNeedModal = ({ isOpen, onClose }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Location / Zone</label>
-              <input type="text" required value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., North Zone" />
+              <select required value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} className={selectClass}>
+                <option value="" disabled>Select Zone...</option>
+                {ZONE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
             </div>
           </div>
           <div className="pt-4 flex gap-3">
@@ -106,23 +164,37 @@ const AddNeedModal = ({ isOpen, onClose }) => {
   );
 };
 
+const SKILL_OPTIONS = ['Medical', 'First Aid', 'Triage', 'Rescue', 'Navigation', 'Logistics', 'Driving', 'Physical Work', 'Data Entry', 'Computer Skills', 'Translation', 'Communication', 'Counseling', 'Construction', 'Cooking', 'Technical', 'Writing'];
+const AVAILABILITY_OPTIONS = ['Anytime', 'Weekdays', 'Weekends', 'Evenings', 'Nights', 'Flexible', 'Remote'];
+const ZONE_OPTIONS = ['North India', 'Northeast India', 'East India', 'South India', 'West India', 'Central India', 'Remote'];
+
 const AddVolunteerModal = ({ isOpen, onClose }) => {
   const { addVolunteer } = useStore();
-  const [formData, setFormData] = useState({ name: '', skills: '', availability: '', zone: '' });
+  const [formData, setFormData] = useState({ name: '', skills: [], availability: '', zone: '' });
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name) return;
+    if (!formData.name || formData.skills.length === 0 || !formData.availability || !formData.zone) return;
     addVolunteer({
       ...formData,
-      skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
       is_available: true
     });
-    setFormData({ name: '', skills: '', availability: '', zone: '' });
+    setFormData({ name: '', skills: [], availability: '', zone: '' });
     onClose();
   };
+
+  const toggleSkill = (skill) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.includes(skill) 
+        ? prev.skills.filter(s => s !== skill) 
+        : [...prev.skills, skill]
+    }));
+  };
+
+  const selectClass = "w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors appearance-none cursor-pointer";
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
@@ -136,26 +208,56 @@ const AddVolunteerModal = ({ isOpen, onClose }) => {
             <X size={24} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+          {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
             <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., Jane Doe" />
           </div>
+
+          {/* Skills — multi-select chip grid */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Skills (Comma separated)</label>
-            <input type="text" required value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., Medical, Driving" />
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Skills <span className="text-slate-500 font-normal">(select all that apply)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {SKILL_OPTIONS.map(skill => (
+                <button
+                  key={skill}
+                  type="button"
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                    formData.skills.includes(skill)
+                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-[0_0_8px_rgba(79,70,229,0.2)]'
+                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
+                  }`}
+                >
+                  {skill}
+                </button>
+              ))}
+            </div>
+            {formData.skills.length === 0 && <p className="text-xs text-slate-500 mt-1">Please select at least one skill.</p>}
           </div>
+
+          {/* Availability & Zone dropdowns */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Availability</label>
-              <input type="text" required value={formData.availability} onChange={e => setFormData({ ...formData, availability: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., Weekends" />
+              <select required value={formData.availability} onChange={e => setFormData({ ...formData, availability: e.target.value })} className={selectClass}>
+                <option value="" disabled>Select...</option>
+                {AVAILABILITY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Operating Zone</label>
-              <input type="text" required value={formData.zone} onChange={e => setFormData({ ...formData, zone: e.target.value })} className="w-full px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors" placeholder="e.g., North Zone" />
+              <select required value={formData.zone} onChange={e => setFormData({ ...formData, zone: e.target.value })} className={selectClass}>
+                <option value="" disabled>Select...</option>
+                {ZONE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
             </div>
           </div>
-          <div className="pt-4 flex gap-3">
+
+          <div className="pt-2 flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-medium hover:bg-slate-700 transition-colors border border-slate-700">Cancel</button>
             <button type="submit" className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all">Add Volunteer</button>
           </div>
@@ -321,12 +423,32 @@ const DashboardView = () => {
              <MapContainer center={[22.0, 79.0]} zoom={4} style={{ height: '100%', width: '100%', minHeight: '350px' }}>
                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap" />
                {needs.filter(n => n.status === 'open').map(n => (
-                 ZONE_COORDS[n.location] && <Marker key={n.id} position={ZONE_COORDS[n.location]} icon={needIcon}><Popup className="dark-popup font-semibold text-slate-800">{n.title}</Popup></Marker>
+                 ZONE_COORDS[n.location] && <Marker key={n.id} position={ZONE_COORDS[n.location]} icon={getNeedIcon(n.urgency)}>
+                   <Popup className="dark-popup font-semibold text-slate-800">
+                     <div className="font-bold text-sm mb-1">{n.title}</div>
+                     <div className="text-xs text-slate-600 mb-1 capitalize">Urgency: {n.urgency}</div>
+                     <div className="text-xs text-slate-600">Skills: {n.skills_required.join(', ')}</div>
+                   </Popup>
+                 </Marker>
                ))}
                {volunteers.map(v => (
-                 ZONE_COORDS[v.zone] && <Marker key={v.id} position={[ZONE_COORDS[v.zone][0] + (Math.random()-0.5)*1.5, ZONE_COORDS[v.zone][1] + (Math.random()-0.5)*1.5]} icon={volunteerIcon}><Popup className="dark-popup text-slate-800">{v.name}</Popup></Marker>
+                 ZONE_COORDS[v.zone] && <Marker key={v.id} position={[ZONE_COORDS[v.zone][0] + (Math.random()-0.5)*1.5, ZONE_COORDS[v.zone][1] + (Math.random()-0.5)*1.5]} icon={getVolunteerIcon(v.is_available)}>
+                   <Popup className="dark-popup text-slate-800">
+                     <div className="font-bold text-sm mb-1 flex items-center gap-1">{v.name} {v.is_available ? <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> : <span className="w-2 h-2 rounded-full bg-slate-500 inline-block"></span>}</div>
+                     <div className="text-xs text-slate-600 mb-1">{v.zone}</div>
+                     <div className="text-xs text-slate-600">Skills: {v.skills.join(', ')}</div>
+                   </Popup>
+                 </Marker>
                ))}
              </MapContainer>
+          </div>
+          {/* Map Legend */}
+          <div className="mt-4 flex flex-wrap gap-4 justify-center text-xs text-slate-400">
+             <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 border border-red-300 inline-block animate-pulse"></span> Critical Need</div>
+             <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-yellow-500 border border-yellow-300 inline-block animate-pulse"></span> Medium Need</div>
+             <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 border border-green-300 inline-block animate-pulse"></span> Low Need</div>
+             <div className="flex items-center gap-1.5 ml-2"><span className="w-2.5 h-2.5 rounded-full bg-indigo-400 border border-indigo-200 inline-block"></span> Available Vol</div>
+             <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-500 border border-slate-400 inline-block"></span> Busy Vol</div>
           </div>
         </div>
         
@@ -424,6 +546,32 @@ const DashboardView = () => {
               <li className="flex gap-3 items-start"><span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-900/50 text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-500/30">2</span> Our AI engine scans all active volunteer profiles.</li>
               <li className="flex gap-3 items-start"><span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-900/50 text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-500/30">3</span> It correlates skills, location, and urgency in seconds.</li>
               <li className="flex gap-3 items-start"><span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-900/50 text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-500/30">4</span> Review the match reason and dispatch help.</li>
+            </ul>
+          </div>
+
+          {/* Zone Legend */}
+          <div className="bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-slate-700/50">
+            <h3 className="font-bold text-lg text-white mb-1 flex items-center gap-2"><MapPin size={20} className="text-indigo-400"/> Zone Guide</h3>
+            <p className="text-xs text-slate-500 mb-4">Based on NDMA/NDRF Area of Responsibility (AoR) groupings.</p>
+            <ul className="space-y-3 text-sm">
+              {[
+                { zone: 'North India',     states: 'Delhi, UP, Uttarakhand, J&K, HP, Punjab',         risk: 'Floods, Earthquakes, Landslides',          color: 'text-red-400' },
+                { zone: 'Northeast India', states: 'Assam, Meghalaya, Manipur, Sikkim, Arunachal',    risk: 'Earthquakes, Flash Floods, Landslides',     color: 'text-orange-400' },
+                { zone: 'East India',      states: 'West Bengal, Odisha, Bihar, Jharkhand',           risk: 'Cyclones, River Flooding, Storm Surges',    color: 'text-yellow-400' },
+                { zone: 'South India',     states: 'Tamil Nadu, Andhra Pradesh, Kerala, Karnataka',   risk: 'Cyclones, Drought, Coastal Flooding',       color: 'text-blue-400' },
+                { zone: 'West India',      states: 'Maharashtra, Gujarat, Rajasthan',                 risk: 'Earthquakes, Droughts, Flash Floods',       color: 'text-teal-400' },
+                { zone: 'Central India',   states: 'Madhya Pradesh, Chhattisgarh, Telangana',        risk: 'Drought, Heatwaves, River Flooding',        color: 'text-green-400' },
+                { zone: 'Remote',          states: 'Isolated tribal, hill & island territories',     risk: 'All hazards — limited access & comms',     color: 'text-purple-400' },
+              ].map(({ zone, states, risk, color }) => (
+                <li key={zone} className="flex gap-3 items-start p-2 rounded-lg hover:bg-slate-700/30 transition-colors">
+                  <span className={`flex-shrink-0 font-bold text-xs mt-0.5 ${color}`}>●</span>
+                  <div>
+                    <div className={`font-semibold text-xs ${color} mb-0.5`}>{zone}</div>
+                    <div className="text-slate-400 text-[11px] leading-relaxed">{states}</div>
+                    <div className="text-slate-500 text-[10px] mt-0.5 italic">{risk}</div>
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -585,6 +733,56 @@ const AppLayout = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in relative z-10">
         {activeTab === 'dashboard' ? <DashboardView /> : <RegistryView />}
       </main>
+
+      {/* About Section Footer */}
+      <footer className="border-t border-slate-800/60 mt-6 bg-slate-900/30 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {/* Branding */}
+            <div className="md:col-span-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl text-white shadow-[0_0_15px_rgba(79,70,229,0.4)] border border-indigo-400/50">
+                  <Heart size={20} />
+                </div>
+                <span className="text-xl font-extrabold text-white">VolunteerMatch <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">AI</span></span>
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                An AI-powered disaster relief coordination platform that instantly connects the right volunteers to the right crises — at the speed of an emergency.
+              </p>
+            </div>
+
+            {/* What it does */}
+            <div>
+              <h4 className="text-white font-bold text-base mb-4 flex items-center gap-2"><Sparkles size={16} className="text-indigo-400" /> What We Do</h4>
+              <ul className="space-y-2.5 text-sm text-slate-400">
+                <li className="flex items-start gap-2"><Check size={14} className="text-green-400 mt-0.5 flex-shrink-0" /> Real-time community needs board for NGOs and relief coordinators.</li>
+                <li className="flex items-start gap-2"><Check size={14} className="text-green-400 mt-0.5 flex-shrink-0" /> Gemini AI automatically ranks the best-fit volunteers by skills, zone, and availability.</li>
+                <li className="flex items-start gap-2"><Check size={14} className="text-green-400 mt-0.5 flex-shrink-0" /> Live geographic map showing active needs and volunteer positions across India.</li>
+                <li className="flex items-start gap-2"><Check size={14} className="text-green-400 mt-0.5 flex-shrink-0" /> Analytics dashboard tracking response rates and urgency distribution.</li>
+                <li className="flex items-start gap-2"><Check size={14} className="text-green-400 mt-0.5 flex-shrink-0" /> One-click dispatch with simulated SMS notifications to matched volunteers.</li>
+              </ul>
+            </div>
+
+            {/* The Problem */}
+            <div>
+              <h4 className="text-white font-bold text-base mb-4 flex items-center gap-2"><AlertCircle size={16} className="text-red-400" /> The Problem We Solve</h4>
+              <p className="text-sm text-slate-400 leading-relaxed mb-3">
+                During disasters, NGOs waste precious hours manually calling volunteers to check availability and skills. Every minute of delay costs lives.
+              </p>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                VolunteerMatch AI eliminates that friction. Our Gemini-powered engine reads a posted need, scans the entire volunteer database, and surfaces the top matches with an AI-generated justification — all in under 3 seconds.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <Sparkles size={12} /> Built for Google Solution Challenge 2026
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-slate-800/50 text-center text-xs text-slate-600">
+            © 2026 VolunteerMatch AI — Built with ❤️ to reduce disaster response time.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
