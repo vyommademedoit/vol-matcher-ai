@@ -377,20 +377,21 @@ const DashboardView = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.02 }}
-                  className="relative bg-slate-800/40 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-slate-700/50 flex flex-col gap-3 group hover:border-indigo-500/40 hover:shadow-[0_0_25px_rgba(79,70,229,0.15)] transition-all overflow-hidden"
+                  className="relative bg-slate-800/40 backdrop-blur-md px-6 pt-4 pb-6 rounded-2xl shadow-lg border border-slate-700/50 flex flex-col gap-3 group hover:border-indigo-500/40 hover:shadow-[0_0_25px_rgba(79,70,229,0.15)] transition-all"
                 >
-                  <div className={`absolute top-0 right-5 transform -translate-y-1/2 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold border backdrop-blur-xl z-10 ${URGENCY_STYLES[need.urgency]}`}>
+                  {/* Badge sits inside the card, top-right corner */}
+                  <div className={`self-end px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold border ${URGENCY_STYLES[need.urgency]}`}>
                     {need.urgency}
                   </div>
                   
-                  <h3 className="font-bold text-lg text-white leading-tight pr-4 relative z-10">{need.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed line-clamp-2 relative z-10">{need.description}</p>
+                  <h3 className="font-bold text-lg text-white leading-tight -mt-2">{need.title}</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed line-clamp-2">{need.description}</p>
                   
-                  <div className="flex flex-wrap gap-2 mt-auto pt-4 relative z-10">
+                  <div className="flex flex-wrap gap-2 mt-auto pt-3">
                     {need.skills_required.map(s => <span key={s} className="bg-slate-900/80 text-slate-300 border border-slate-700 text-xs px-2.5 py-1 rounded-md font-medium">{s}</span>)}
                   </div>
 
-                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-700/50 relative z-10">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700/50">
                      <div className="text-xs text-slate-500 flex items-center gap-1.5"><Clock size={14}/> Just now</div>
                      
                      {need.status === 'open' ? (

@@ -34,14 +34,14 @@ Each item should have: "volunteer_id", "score" (1-10), "reason" (1 concise sente
 
 Return ONLY valid JSON array. No markdown, no explanation outside the array.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
+      generationConfig: { temperature: 0.2 }
     })
   });
 
@@ -53,7 +53,8 @@ Return ONLY valid JSON array. No markdown, no explanation outside the array.`;
   const data = await response.json();
   const textContent = data.candidates[0].content.parts[0].text;
   try {
-    return JSON.parse(textContent);
+    const cleaned = textContent.replace(/```json\n?|```/g, '').trim();
+    return JSON.parse(cleaned);
   } catch (e) {
     throw new Error("Failed to parse Gemini output as JSON");
   }
