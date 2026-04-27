@@ -21,6 +21,8 @@ Instead of an admin manually reading hundreds of rows to assign tasks, the syste
 - **Volunteer Registry:** Maintain a living database of available help, zoned by location and tagged by skills.
 - **AI Matching Engine:** Unbiased, instant matching using Gemini AI.
 - **Explainable AI:** Gemini provides a human-readable justification for every match it suggests, building trust with NGO workers.
+- **Mission Control & Deployment Tracking:** A dedicated lifecycle management view to track "En Route" volunteers and mark missions as fulfilled.
+- **Dynamic Resource Balancing:** Matched volunteers are automatically set to 'Busy' in the database until their mission is complete, ensuring the AI never over-allocates the same personnel.
 - **Real-time Synchronization:** Powered by Firebase Firestore, ensuring multiple admins see updates instantly.
 
 ## 🚀 Technologies Used

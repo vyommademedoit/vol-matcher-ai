@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StoreProvider, useStore } from './store';
-// Build ID: 2026-04-26-2018-FINAL
+// Build ID: 2026-04-26-2026-GOLD-DATA
 import { runAIVolunteerMatch as runAIVMatch } from './api';
 import { LayoutDashboard, AlertCircle, Sparkles, Check, X, Clock, HelpCircle, Users, UserPlus, MapPin, Heart, Home, BarChart2, Map as MapIcon } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -288,12 +288,12 @@ const MatchModal = ({ need, isOpen, onClose }) => {
 
   if (!isOpen || !need) return null;
 
-  const handleConfirm = (volunteerId) => {
+  const handleConfirm = (volunteerId, justification) => {
     const loadingToast = toast.loading('Calculating deployment routes...', {
       style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' }
     });
     setTimeout(() => {
-      confirmMatch(Date.now().toString(), need.id);
+      confirmMatch(volunteerId, need.id, justification);
       toast.success('SMS Dispatch sent to volunteer!', { 
         id: loadingToast, duration: 4000,
         style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' }
@@ -356,7 +356,7 @@ const MatchModal = ({ need, isOpen, onClose }) => {
                       <div className="text-right">
                         <div className="text-2xl font-black text-brand-gold tracking-tighter">{match.score}<span className="text-xs text-slate-500 font-normal">/10</span></div>
                         <button 
-                          onClick={() => handleConfirm(v.id)}
+                          onClick={() => handleConfirm(v.id, match.reason)}
                           className={`mt-4 px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${idx === 0 ? 'bg-brand-gold text-brand-dark hover:scale-105' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
                         >
                           Confirm Match
@@ -369,6 +369,59 @@ const MatchModal = ({ need, isOpen, onClose }) => {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+const ActiveDeployments = () => {
+  const { matches, volunteers, needs, completeMatch } = useStore();
+  const activeMatches = matches.filter(m => m.status === 'deployed');
+
+  if (activeMatches.length === 0) return null;
+
+  return (
+    <div className="bg-brand-card/20 backdrop-blur-xl p-6 rounded-2xl border border-brand-light/10 mb-8">
+      <h3 className="font-bold text-lg text-brand-bright mb-6 flex items-center gap-2">
+        <Sparkles size={20} className="text-brand-gold"/> Active Deployments
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {activeMatches.map(match => {
+          const v = volunteers.find(v => v.id === match.volunteer_id);
+          const n = needs.find(n => n.id === match.need_id);
+          if (!v || !n) return null;
+
+          return (
+            <motion.div 
+              key={match.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-slate-900/50 border border-brand-gold/30 rounded-xl p-4 flex flex-col gap-3"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-bold text-white text-sm">{v.name}</h4>
+                  <p className="text-[10px] text-brand-gold uppercase font-bold mt-0.5 tracking-wider">{n.title}</p>
+                </div>
+                <div className="bg-brand-gold/20 text-brand-gold text-[9px] px-2 py-0.5 rounded-full font-black border border-brand-gold/30">EN ROUTE</div>
+              </div>
+              
+              <p className="text-[11px] text-slate-400 line-clamp-2 italic">"{match.ai_justification}"</p>
+              
+              <div className="mt-2 pt-3 border-t border-slate-800 flex justify-between items-center">
+                <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                  <MapPin size={10}/> {v.zone}
+                </div>
+                <button 
+                  onClick={() => completeMatch(match.id, v.id, n.id)}
+                  className="text-[10px] font-bold bg-brand-gold/10 hover:bg-brand-gold text-brand-gold hover:text-brand-dark border border-brand-gold/30 px-3 py-1 rounded-lg transition-all"
+                >
+                  Complete Mission
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -482,6 +535,8 @@ const DashboardView = () => {
           </div>
         </div>
       </div>
+
+      <ActiveDeployments />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Needs Board */}
