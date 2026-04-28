@@ -1,0 +1,61 @@
+Guidelines
+●Kindly use the given template for submitting your prototype(Make a copy of the 
+template)
+●One team is only required to submit one project.
+●Follow this template while preparing your presentation.
+●You are welcome to add as many POCs and design concepts to support your 
+project.
+●The project should be feasible and the team members should be capable enough, to 
+come up with the fully functioning prototype of the same idea, if required.
+●In case of queries, kindly reach out to us at solutionchallengesupport@hack2skill.com
+Note: Prototype must include cloud deployment and use at least one Google AI model or service (e.g., 
+Gemini) as part of the solution.
+
+Team Details
+a.Team name: Snack -Overflow
+b.Team leader name: Anuj Singh
+c.Problem Statement: 
+
+
+Brief about your solution
+
+
+Opportunities
+a.How different is it from any of the other existing ideas?
+b.How will it be able to solve the problem?
+c.USP of the proposed solution
+
+
+List of features offered by the solution
+
+
+Process flow diagram or Use -case diagram
+
+
+Wireframes/Mock diagrams of the proposed solution (optional)
+
+
+Architecture diagram of the proposed solution
+
+
+Technologies to be used in the solution
+
+
+Estimated implementation cost (optional)
+
+
+Snapshots of the MVP
+
+
+Additional Details/Future Development (if any)
+
+
+Provide links to your:
+1.GitHub Public Repository
+2.Demo Video Link (3 Minutes)
+3.MVP Link
+4.Working Prototype Link
+
+
+
+

@@ -5,18 +5,18 @@ import { collection, onSnapshot, addDoc, updateDoc, doc, setDoc, getDocs } from 
 const StoreContext = createContext();
 
 const DUMMY_NEEDS = [
-  { id: 'n1', title: 'Medical Supplies for Relief Camp', description: 'Need basic first aid, bandages, and immediate care staff for the downstream flood relief camp in North Zone.', skills_required: ['Medical', 'First Aid'], urgency: 'critical', location: 'North India', status: 'open', created_at: Date.now() },
-  { id: 'n2', title: 'Food Distribution Coordination', description: 'Need organizers to pack and distribute 2000 meal packets for affected villages.', skills_required: ['Logistics', 'Physical Work'], urgency: 'medium', location: 'East India', status: 'open', created_at: Date.now() - 100000 },
-  { id: 'n3', title: 'Data Entry for Displaced Families', description: 'Log family details into the central database for government compensation tracking.', skills_required: ['Data Entry', 'Computer Skills'], urgency: 'low', location: 'Central India', status: 'open', created_at: Date.now() - 200000 },
-  { id: 'n4', title: 'Cyclone Shelter Setup', description: 'Assist in setting up temporary high-capacity shelters in coastal Odisha.', skills_required: ['Construction', 'Physical Work'], urgency: 'critical', location: 'East India', status: 'open', created_at: Date.now() - 300000 },
-  { id: 'n5', title: 'Multilingual Crisis Support', description: 'Translate safety instruction broadcasts into Bengali and Assamese dialects.', skills_required: ['Translation', 'Communication'], urgency: 'medium', location: 'Northeast India', status: 'open', created_at: Date.now() - 400000 },
-  { id: 'n6', title: 'Aerial Damage Assessment', description: 'Need licensed drone pilots to map flooded areas and identify stranded individuals.', skills_required: ['Technical', 'Navigation'], urgency: 'critical', location: 'South India', status: 'open', created_at: Date.now() - 500000 },
-  { id: 'n7', title: 'Trauma Counseling for Children', description: 'Provide psychological first aid to affected children in relief camps.', skills_required: ['Counseling', 'Medical'], urgency: 'critical', location: 'West India', status: 'open', created_at: Date.now() - 600000 },
-  { id: 'n8', title: 'Heavy Vehicle Evacuation', description: 'Licensed truck drivers needed for immediate transport of equipment to the disaster site.', skills_required: ['Driving', 'Logistics'], urgency: 'critical', location: 'North India', status: 'open', created_at: Date.now() - 700000 },
-  { id: 'n9', title: 'Ham Radio Communication', description: 'Establish communications in remote zones where all cell towers are destroyed.', skills_required: ['Communication', 'Technical'], urgency: 'critical', location: 'Remote', status: 'open', created_at: Date.now() - 800000 },
-  { id: 'n10', title: 'Vaccine Cold-Chain Management', description: 'Logistics specialists to manage temperature-controlled vaccine transport to camps.', skills_required: ['Logistics', 'Medical'], urgency: 'medium', location: 'Central India', status: 'open', created_at: Date.now() - 900000 },
-  { id: 'n11', title: 'Urban Search and Rescue', description: 'Trained personnel needed for debris clearance and building structural assessment.', skills_required: ['Rescue', 'Construction'], urgency: 'critical', location: 'West India', status: 'open', created_at: Date.now() - 950000 },
-  { id: 'n12', title: 'Sanitation & Hygiene Training', description: 'Educate camp residents on hygiene to prevent post-disaster disease outbreaks.', skills_required: ['Medical', 'Communication'], urgency: 'low', location: 'South India', status: 'open', created_at: Date.now() - 1000000 }
+  { id: 'n1',  title: 'Medical Supplies for Relief Camp',   description: 'Need basic first aid, bandages, and immediate care staff for the downstream flood relief camp in North Zone.',          skills_required: ['Medical', 'First Aid'],          urgency: 'critical', location: 'North India',     when_needed: 'Anytime',  status: 'open', created_at: Date.now() },
+  { id: 'n2',  title: 'Food Distribution Coordination',     description: 'Need organizers to pack and distribute 2000 meal packets for affected villages.',                                     skills_required: ['Logistics', 'Physical Work'],    urgency: 'medium',   location: 'East India',     when_needed: 'Weekday',  status: 'open', created_at: Date.now() - 100000 },
+  { id: 'n3',  title: 'Data Entry for Displaced Families',  description: 'Log family details into the central database for government compensation tracking.',                                 skills_required: ['Data Entry', 'Computer Skills'], urgency: 'low',      location: 'Central India',  when_needed: 'Weekday',  status: 'open', created_at: Date.now() - 200000 },
+  { id: 'n4',  title: 'Cyclone Shelter Setup',              description: 'Assist in setting up temporary high-capacity shelters in coastal Odisha.',                                           skills_required: ['Construction', 'Physical Work'], urgency: 'critical', location: 'East India',     when_needed: 'Anytime',  status: 'open', created_at: Date.now() - 300000 },
+  { id: 'n5',  title: 'Multilingual Crisis Support',        description: 'Translate safety instruction broadcasts into Bengali and Assamese dialects.',                                        skills_required: ['Translation', 'Communication'],  urgency: 'medium',   location: 'Northeast India',when_needed: 'Weekday',  status: 'open', created_at: Date.now() - 400000 },
+  { id: 'n6',  title: 'Aerial Damage Assessment',           description: 'Need licensed drone pilots to map flooded areas and identify stranded individuals.',                                  skills_required: ['Technical', 'Navigation'],       urgency: 'critical', location: 'South India',    when_needed: 'Anytime',  status: 'open', created_at: Date.now() - 500000 },
+  { id: 'n7',  title: 'Trauma Counseling for Children',     description: 'Provide psychological first aid to affected children in relief camps.',                                             skills_required: ['Counseling', 'Medical'],         urgency: 'critical', location: 'West India',     when_needed: 'Anytime',  status: 'open', created_at: Date.now() - 600000 },
+  { id: 'n8',  title: 'Heavy Vehicle Evacuation',           description: 'Licensed truck drivers needed for immediate transport of equipment to the disaster site.',                          skills_required: ['Driving', 'Logistics'],          urgency: 'critical', location: 'North India',    when_needed: 'Anytime',  status: 'open', created_at: Date.now() - 700000 },
+  { id: 'n9',  title: 'Ham Radio Communication',            description: 'Establish communications in remote zones where all cell towers are destroyed.',                                      skills_required: ['Communication', 'Technical'],    urgency: 'critical', location: 'Remote',         when_needed: 'Anytime',  status: 'open', created_at: Date.now() - 800000 },
+  { id: 'n10', title: 'Vaccine Cold-Chain Management',      description: 'Logistics specialists to manage temperature-controlled vaccine transport to camps.',                                 skills_required: ['Logistics', 'Medical'],          urgency: 'medium',   location: 'Central India',  when_needed: 'Weekday',  status: 'open', created_at: Date.now() - 900000 },
+  { id: 'n11', title: 'Urban Search and Rescue',            description: 'Trained personnel needed for debris clearance and building structural assessment.',                                  skills_required: ['Rescue', 'Construction'],        urgency: 'critical', location: 'West India',     when_needed: 'Anytime',  status: 'open', created_at: Date.now() - 950000 },
+  { id: 'n12', title: 'Sanitation & Hygiene Training',      description: 'Educate camp residents on hygiene to prevent post-disaster disease outbreaks.',                                     skills_required: ['Medical', 'Communication'],      urgency: 'low',      location: 'South India',    when_needed: 'Weekend',  status: 'open', created_at: Date.now() - 1000000 },
 ];
 
 const DUMMY_VOLUNTEERS = [
@@ -61,14 +61,20 @@ export const StoreProvider = ({ children }) => {
     const seedDatabase = async () => {
       try {
         const vSnap = await getDocs(collection(db, 'volunteers'));
+        const nSnap = await getDocs(collection(db, 'needs'));
         const hasGoldData = vSnap.docs.some(d => d.id === 'v25');
-        
-        if (!hasGoldData) { 
-          console.log("Seeding Firebase with the new High-Fidelity Gold Dataset...");
+        const hasScheduleField = nSnap.docs.some(d => d.data().when_needed);
+
+        if (!hasGoldData) {
+          console.log("Seeding Firebase with the High-Fidelity Gold Dataset...");
           for (const v of DUMMY_VOLUNTEERS) await setDoc(doc(db, 'volunteers', v.id), v);
           for (const n of DUMMY_NEEDS) await setDoc(doc(db, 'needs', n.id), n);
           for (const m of DUMMY_MATCHES) await setDoc(doc(db, 'matches', m.id), m);
-          console.log("Seeding complete!");
+          console.log("Full seeding complete!");
+        } else if (!hasScheduleField) {
+          console.log("Patching needs with when_needed field...");
+          for (const n of DUMMY_NEEDS) await setDoc(doc(db, 'needs', n.id), n);
+          console.log("Needs patch complete!");
         }
       } catch (err) {
         console.error("Error seeding DB:", err);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StoreProvider, useStore } from './store';
 // Build ID: 2026-04-26-2026-GOLD-DATA
 import { runAIVolunteerMatch as runAIVMatch } from './api';
-import { LayoutDashboard, AlertCircle, Sparkles, Check, X, Clock, HelpCircle, Users, UserPlus, MapPin, Heart, Home, BarChart2, Map as MapIcon } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Sparkles, Check, X, Clock, HelpCircle, Users, UserPlus, MapPin, Heart, Home, BarChart2, Map as MapIcon, Calendar } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -20,6 +20,19 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
 });
+
+const timeAgo = (ts) => {
+  if (!ts) return 'Unknown';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'Just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+};
 
 const ZONE_COORDS = {
   'North India':     [30.0668, 79.0193],  // Uttarakhand/UP hills
@@ -69,7 +82,7 @@ const URGENCY_STYLES = {
 
 const AddNeedModal = ({ isOpen, onClose }) => {
   const { addNeed } = useStore();
-  const [formData, setFormData] = useState({ title: '', description: '', skills: [], urgency: 'low', location: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', skills: [], urgency: 'low', location: '', when_needed: 'Anytime' });
 
   if (!isOpen) return null;
 
@@ -80,7 +93,7 @@ const AddNeedModal = ({ isOpen, onClose }) => {
       ...formData,
       skills_required: formData.skills
     });
-    setFormData({ title: '', description: '', skills: [], urgency: 'low', location: '' });
+    setFormData({ title: '', description: '', skills: [], urgency: 'low', location: '', when_needed: 'Anytime' });
     onClose();
   };
 
@@ -155,6 +168,12 @@ const AddNeedModal = ({ isOpen, onClose }) => {
               </select>
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">When is help needed?</label>
+            <select value={formData.when_needed} onChange={e => setFormData({ ...formData, when_needed: e.target.value })} className={selectClass}>
+              {WHEN_NEEDED_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
           <div className="pt-4 flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-brand-dark text-brand-light rounded-lg font-medium hover:bg-brand-card transition-colors border border-brand-light/10">Cancel</button>
             <button type="submit" className="flex-1 px-4 py-2 bg-brand-gold text-brand-dark rounded-lg font-bold hover:bg-brand-gold/90 shadow-xl shadow-black/20 transition-all">Post Need</button>
@@ -168,6 +187,7 @@ const AddNeedModal = ({ isOpen, onClose }) => {
 const SKILL_OPTIONS = ['Medical', 'First Aid', 'Triage', 'Rescue', 'Navigation', 'Logistics', 'Driving', 'Physical Work', 'Data Entry', 'Computer Skills', 'Translation', 'Communication', 'Counseling', 'Construction', 'Cooking', 'Technical', 'Writing'];
 const AVAILABILITY_OPTIONS = ['Anytime', 'Weekdays', 'Weekends', 'Evenings', 'Nights', 'Flexible', 'Remote'];
 const ZONE_OPTIONS = ['North India', 'Northeast India', 'East India', 'South India', 'West India', 'Central India', 'Remote'];
+const WHEN_NEEDED_OPTIONS = ['Anytime', 'Weekday', 'Weekend', 'Evening', 'Night'];
 
 const AddVolunteerModal = ({ isOpen, onClose }) => {
   const { addVolunteer } = useStore();
@@ -316,8 +336,12 @@ const MatchModal = ({ need, isOpen, onClose }) => {
         <div className="p-6 overflow-y-auto flex-1">
           <div className="mb-6 bg-slate-800/50 border border-slate-700 p-4 rounded-xl backdrop-blur-sm">
             <h4 className="font-semibold text-white">{need.title}</h4>
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
                {need.skills_required.map(s => <span key={s} className="bg-slate-700 text-xs px-2 py-1 rounded text-slate-300 font-medium border border-slate-600">{s}</span>)}
+            </div>
+            <div className="flex gap-4 mt-3 text-xs text-slate-400">
+              <span className="flex items-center gap-1"><MapPin size={11} className="text-brand-gold/70" /> {need.location}</span>
+              {need.when_needed && <span className="flex items-center gap-1"><Calendar size={11} className="text-brand-gold/70" /> Needed: <span className="text-brand-gold font-semibold ml-0.5">{need.when_needed}s</span></span>}
             </div>
           </div>
 
@@ -435,7 +459,9 @@ const DashboardView = () => {
   const [matchNeed, setMatchNeed] = useState(null);
 
   const openNeeds = needs.filter(n => n.status === 'open');
-  const fulfilledNeeds = needs.filter(n => n.status === 'fulfilled').length;
+  const activeNeedsList = needs.filter(n => n.status !== 'fulfilled');
+  const fulfilledNeedsList = needs.filter(n => n.status === 'fulfilled');
+  const fulfilledNeeds = fulfilledNeedsList.length;
   const thisWeekMatches = matches.length;
 
   // Chart Data
@@ -550,7 +576,7 @@ const DashboardView = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AnimatePresence>
-              {needs.map((need, idx) => (
+              {activeNeedsList.map((need, idx) => (
                 <motion.div 
                   key={need.id} 
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -571,8 +597,15 @@ const DashboardView = () => {
                     {need.skills_required.map(s => <span key={s} className="bg-brand-dark/80 text-brand-light border border-brand-light/10 text-xs px-2.5 py-1 rounded-md font-medium">{s}</span>)}
                   </div>
 
+                  {need.when_needed && need.when_needed !== 'Anytime' && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-brand-light/60 mt-1">
+                      <Calendar size={11} className="text-brand-gold/60" />
+                      Needed: <span className="text-brand-light/90 font-semibold ml-0.5">{need.when_needed}s</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-brand-light/10">
-                     <div className="text-xs text-brand-light/50 flex items-center gap-1.5"><Clock size={14} className="text-brand-gold/50"/> Just now</div>
+                     <div className="text-xs text-brand-light/50 flex items-center gap-1.5"><Clock size={14} className="text-brand-gold/50"/> {timeAgo(need.created_at)}</div>
                      
                      {need.status === 'open' ? (
                        <button onClick={() => setMatchNeed(need)} className="flex items-center gap-1.5 text-sm font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/30 px-4 py-2 rounded-xl hover:bg-brand-gold hover:text-brand-dark transition-all shadow-md shadow-black/40">
@@ -587,12 +620,37 @@ const DashboardView = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
-            {needs.length === 0 && (
+            {activeNeedsList.length === 0 && (
               <div className="col-span-full py-16 text-center text-brand-light/50 bg-brand-card/20 rounded-3xl border border-dashed border-brand-light/10">
                 No active needs right now.
               </div>
             )}
           </div>
+
+          {fulfilledNeedsList.length > 0 && (
+            <div className="mt-8 space-y-4">
+              <h2 className="text-2xl font-bold text-brand-bright flex items-center gap-2">
+                <Check size={24} className="text-green-500" /> Fulfilled Requests
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {fulfilledNeedsList.map((need) => (
+                  <div 
+                    key={need.id} 
+                    className="relative bg-brand-card/20 px-6 pt-4 pb-6 rounded-2xl border border-brand-light/5 flex flex-col gap-3 opacity-70"
+                  >
+                    <div className="self-end px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold border bg-green-900/30 text-green-400 border-green-800/50">
+                      Fulfilled
+                    </div>
+                    <h3 className="font-bold text-lg text-brand-light leading-tight -mt-2 line-through">{need.title}</h3>
+                    <p className="text-brand-light/70 text-sm leading-relaxed line-clamp-2">{need.description}</p>
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-brand-light/5">
+                       <div className="text-xs text-brand-light/50 flex items-center gap-1.5"><Clock size={14} className="text-brand-gold/30"/> {timeAgo(need.created_at)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}

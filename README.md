@@ -12,16 +12,18 @@ During critical emergencies—such as flood relief, earthquakes, or civil crises
 ## 💡 Solution Overview
 **VolunteerMatch AI** is a centralized web dashboard that solves this coordination crisis. NGO admins can list "Community Needs" (annotated with urgency, location, and skills) alongside a registry of available volunteers. 
 
-Instead of an admin manually reading hundreds of rows to assign tasks, the system uses the **Google Gemini API** (gemini-1.5-flash) to intelligently reason over unstructured volunteer profiles and community needs. With a single click of "Find AI Match," the engine produces a ranked list of the top 3 best-suited volunteers, accompanied by natural language justifications for *why* they are the perfect fit.
+Instead of an admin manually reading hundreds of rows to assign tasks, the system uses the **Google Gemini API** (gemini-2.0-flash-lite) to intelligently reason over unstructured volunteer profiles and community needs. With a single click of "Find AI Match," the engine produces a ranked list of the top 3 best-suited volunteers, evaluated against a strict 5-factor rubric (Skills, Zone, Availability, Skill Depth, and Specialisation), accompanied by natural language justifications for *why* they are the perfect fit.
 
 ### Key Features
 - **Live Disaster Map:** A real-time geographic visualization mapping urgent needs and volunteer locations.
 - **Operational Analytics:** Dynamic charts providing a high-level overview of crisis zones and volunteer deployments.
 - **Community Needs Board:** Visualize and prioritize alerts by urgency (Critical/Medium/Low).
 - **Volunteer Registry:** Maintain a living database of available help, zoned by location and tagged by skills.
-- **AI Matching Engine:** Unbiased, instant matching using Gemini AI.
+- **AI Matching Engine:** Unbiased, deterministic matching using Gemini AI. Follows a strict 5-factor heuristic rubric to guarantee high-quality matches.
 - **Explainable AI:** Gemini provides a human-readable justification for every match it suggests, building trust with NGO workers.
+- **Schedule Compatibility:** The engine inherently understands time. It compares "When Needed" parameters against volunteer availability windows, safely handling mismatches or immediate urgency.
 - **Mission Control & Deployment Tracking:** A dedicated lifecycle management view to track "En Route" volunteers and mark missions as fulfilled.
+- **Fulfilled Requests Archive:** Instantly tracks the history of successfully completed community needs with dynamically updated timestamps.
 - **Dynamic Resource Balancing:** Matched volunteers are automatically set to 'Busy' in the database until their mission is complete, ensuring the AI never over-allocates the same personnel.
 - **Real-time Synchronization:** Powered by Firebase Firestore, ensuring multiple admins see updates instantly.
 
@@ -29,7 +31,7 @@ Instead of an admin manually reading hundreds of rows to assign tasks, the syste
 - Frontend: **React** (Single-file simplified UI via Vite)
 - Styling: **Tailwind CSS**
 - Database & Hosting: **Firebase** (Firestore Database, Firebase Hosting)
-- AI Integration: **Google Gemini API** (gemini-1.5-flash)
+- AI Integration: **Google Gemini API** (gemini-2.0-flash-lite)
 - Icons: **Lucide React**
 
 ## 💻 Running the Prototype Locally
