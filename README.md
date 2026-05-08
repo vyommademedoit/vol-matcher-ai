@@ -1,50 +1,136 @@
 # VolunteerMatch AI 🤝
 
-> A smart resource allocation platform built for the Hack2Skill × Google for Developers — Solution Challenge 2026.
+> **Empowering NGO coordinators with Explainable AI Dispatch for rapid disaster relief and community coordination.**
 
-VolunteerMatch AI is a web-based artificial intelligence platform that empowers NGO administrators to seamlessly match available personnel with urgent community needs in real-time. By leveraging Google's Gemini AI, we eliminate the need for manual, spreadsheet-based coordination, replacing it with an explainable, data-driven matching engine.
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=firebase)](https://volunteer-matcherai.web.app)
+[![Solution Challenge 2026](https://img.shields.io/badge/Solution%20Challenge-2026-blue?style=for-the-badge&logo=google)](https://developers.google.com/community/gdsc-solution-challenge)
+[![Built with Gemini](https://img.shields.io/badge/Built%20with-Gemini%202.0-orange?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
+
+VolunteerMatch AI is a next-generation resource allocation platform built for the **Hack2Skill × Google for Developers — Solution Challenge 2026**. It transforms how NGOs respond to critical emergencies by replacing manual, spreadsheet-based coordination with an autonomous, **deterministic AI matching engine**.
 
 ---
 
-## 🛑 Problem Statement
-During critical emergencies—such as flood relief, earthquakes, or civil crises—every minute saved on logistics translates directly to **lives saved**. Local social groups and NGOs collect community needs data through paper surveys and fragmented messages. This data is often siloed and scattered. When disaster strikes, it becomes nearly impossible to instantly see a geographic overview of where help is needed most, or to quickly connect the *right* available volunteers to the most urgent tasks.
+## 🛑 The Problem: "The Coordination Crisis"
+During critical emergencies—such as floods, earthquakes, or civil crises—local social groups struggle with siloed, fragmented data.
+- **Data Silos:** Community needs are captured on paper or in scattered WhatsApp messages.
+- **Manual Bottlenecks:** NGO admins spend hours manually reading profiles to match volunteers to tasks.
+- **High Stakes:** Every minute wasted on logistics translates directly to **lives lost**.
 
-## 💡 Solution Overview
-**VolunteerMatch AI** is a centralized web dashboard that solves this coordination crisis. NGO admins can list "Community Needs" (annotated with urgency, location, and skills) alongside a registry of available volunteers. 
+## 💡 Our Solution: "Explainable AI Dispatch"
+**VolunteerMatch AI** centralizes disaster response into a single, real-time dashboard. By integrating **Google Gemini 2.0 Flash Lite**, we automate the cognitive reasoning process, allowing admins to dispatch the right personnel to the right location in seconds.
 
-Instead of an admin manually reading hundreds of rows to assign tasks, the system uses the **Google Gemini API** (gemini-2.0-flash-lite) to intelligently reason over unstructured volunteer profiles and community needs. With a single click of "Find AI Match," the engine produces a ranked list of the top 3 best-suited volunteers, evaluated against a strict 5-factor rubric (Skills, Zone, Availability, Skill Depth, and Specialisation), accompanied by natural language justifications for *why* they are the perfect fit.
+### The "Wow" Factor: Explainable AI
+Unlike a "black-box" algorithm, our system provides human-readable justifications for every match. NGO workers maintain absolute trust and final control over every life-saving deployment.
 
-### Key Features
-- **Live Disaster Map:** A real-time geographic visualization mapping urgent needs and volunteer locations.
-- **Operational Analytics:** Dynamic charts providing a high-level overview of crisis zones and volunteer deployments.
-- **Community Needs Board:** Visualize and prioritize alerts by urgency (Critical/Medium/Low).
-- **Volunteer Registry:** Maintain a living database of available help, zoned by location and tagged by skills.
-- **AI Matching Engine:** Unbiased, deterministic matching using Gemini AI. Follows a strict 5-factor heuristic rubric to guarantee high-quality matches.
-- **Explainable AI:** Gemini provides a human-readable justification for every match it suggests, building trust with NGO workers.
-- **Schedule Compatibility:** The engine inherently understands time. It compares "When Needed" parameters against volunteer availability windows, safely handling mismatches or immediate urgency.
-- **Mission Control & Deployment Tracking:** A dedicated lifecycle management view to track "En Route" volunteers and mark missions as fulfilled.
-- **Fulfilled Requests Archive:** Instantly tracks the history of successfully completed community needs with dynamically updated timestamps.
-- **Dynamic Resource Balancing:** Matched volunteers are automatically set to 'Busy' in the database until their mission is complete, ensuring the AI never over-allocates the same personnel.
-- **Real-time Synchronization:** Powered by Firebase Firestore, ensuring multiple admins see updates instantly.
+---
+
+## 🛠️ Technical Architecture
+
+VolunteerMatch AI follows a modern, real-time architecture designed for speed and reliability in high-pressure scenarios.
+
+```mermaid
+graph TD
+    A[NGO Admin / User] -->|Interacts with| B(React.js Frontend UI)
+    B -->|Deploys to| C[Firebase Hosting]
+    B <-->|Real-time Sync| D[(Firebase Firestore DB)]
+    B -->|Asks for AI Reasoning| E{Google Gemini 2.0 API}
+    E -->|Returns Ranked Matches & Reasons| B
+    
+    style B fill:#f5cb5c,stroke:#333,stroke-width:2px,color:#000
+    style D fill:#f58220,stroke:#333,stroke-width:2px,color:#fff
+    style E fill:#4285F4,stroke:#333,stroke-width:2px,color:#fff
+```
+
+### Process Flow: Need-to-Deployment Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant Admin as NGO Admin
+    participant UI as VolunteerMatch Platform
+    participant DB as Firebase Firestore
+    participant AI as Google Gemini API
+    
+    Admin->>UI: Post "Community Need" (Skills, Zone, Time)
+    UI->>DB: Save Need & Fetch Active Volunteers
+    DB-->>UI: Return 100+ Volunteers
+    UI->>UI: Pre-filter Top 10 by Relevance Checklist
+    UI->>AI: Send Top 10 + 5-Factor Rubric Prompt
+    AI-->>UI: Return Top 3 Matches + Text Justifications
+    UI-->>Admin: Display Explainable Matches
+    Admin->>UI: Click "Confirm Match"
+    UI->>DB: Mark Need 'Matched', Volunteer 'Busy'
+    Admin->>UI: Click "Complete Mission"
+    UI->>DB: Archive to 'Fulfilled', Volunteer 'Available'
+```
+
+---
+
+## 🧠 The AI Matching Engine: 5-Factor Rubric
+
+Our matching engine isn't just a search; it's a reasoning system. Gemini evaluates every candidate against a strict **5-factor heuristic rubric**:
+
+1.  **Skills Overlap (40%)**: Calculated ratio of volunteer skills matching the need's requirements.
+2.  **Zone Proximity (20%)**: Leverages a zone-adjacency map to prefer local or neighboring personnel.
+3.  **Schedule Intelligence (20%)**: Native understanding of time (e.g., matching "Weekend Needs" only to "Weekend-available" volunteers).
+4.  **Skill Depth (10%)**: Rewards versatile volunteers with additional relevant capabilities.
+5.  **Specialization Bonus (10%)**: Extra points for high-impact skills (Medical, Triage, Rescue, Ham Radio, Drones).
+
+---
+
+## ✨ Key Features
+- **Live Disaster Map:** Real-time geographic visualization of urgent needs and volunteer distribution.
+- **Operational Analytics:** Live charts tracking crisis zones and deployment efficiency using **Recharts**.
+- **Dynamic Resource Balancing:** Matched volunteers are set to 'Busy' automatically to prevent double-booking.
+- **Mission Control:** A dedicated lifecycle view for tracking "En Route" volunteers and mission fulfillment.
+- **Real-time Sync:** Powered by **Firebase Firestore**, ensuring all admins see updates instantly.
+- **Glassmorphism UI:** A premium, modern interface built with **Tailwind CSS** and **Framer Motion**.
+
+---
 
 ## 🚀 Technologies Used
-- Frontend: **React** (Single-file simplified UI via Vite)
-- Styling: **Tailwind CSS**
-- Database & Hosting: **Firebase** (Firestore Database, Firebase Hosting)
-- AI Integration: **Google Gemini API** (gemini-2.0-flash-lite)
-- Icons: **Lucide React**
-
-## 💻 Running the Prototype Locally
-
-To test this prototype locally, follow these steps:
-
-1. Clone this repository.
-2. Ensure you have Node.js installed.
-3. Run `npm install` to grab the dependencies.
-4. Create a `.env` file in the root directory and add your Gemini API Key: `VITE_GEMINI_API_KEY=your_api_key_here`
-5. Run `npm run dev` to start the frontend server.
-6. (Optional) If you didn't set up the `.env` file, you can click the "Sparkles" settings icon in the bottom right corner of the dashboard to input your API Key before testing the AI matching!
-6. Open `src/App.jsx` to view the entire simplified UI structure in one place.
+- **Frontend Core:** React 18, Vite
+- **AI Integration:** Google Gemini 2.0 Flash Lite API
+- **Database & Sync:** Firebase Firestore (NoSQL)
+- **Deployment:** Firebase Hosting
+- **Styling:** Tailwind CSS, Framer Motion (Animations)
+- **Visualization:** React-Leaflet (Maps), Recharts (Charts)
+- **Icons:** Lucide React
 
 ---
-*Built with ❤️ for Solution Challenge 2026.*
+
+## 💻 Local Development
+
+To run the prototype on your machine:
+
+1.  **Clone the Repo:**
+    ```bash
+    git clone https://github.com/your-repo/vol-matcher-ai.git
+    cd vol-matcher-ai
+    ```
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Configure Environment:**
+    Create a `.env` file in the root:
+    ```env
+    VITE_GEMINI_API_KEY=your_google_ai_studio_api_key
+    ```
+4.  **Start Dev Server:**
+    ```bash
+    npm run dev
+    ```
+5.  **Configuration Fallback:**
+    If you don't have an API key handy, click the **Sparkles Settings Icon** in the bottom-right corner of the dashboard to input it directly in the browser!
+
+---
+
+## 🗺️ Roadmap: The Future of VolunteerMatch AI
+- **Multi-modal Damage Assessment:** Use **Gemini Vision** to analyze disaster zone photos and auto-extract skill requirements.
+- **Omni-channel Dispatch:** Automated SMS/WhatsApp notifications for volunteers via Twilio integration.
+- **Offline-First PWA:** Critical for field workers in areas with unstable internet connectivity.
+- **Global Zone Mapping:** Expanding the adjacency engine to support international NDMA zones.
+
+---
+*Built with ❤️ for the Solution Challenge 2026.*
+
